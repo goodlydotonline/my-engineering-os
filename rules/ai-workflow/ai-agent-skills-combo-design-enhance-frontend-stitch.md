@@ -1,7 +1,7 @@
 ---
 Title: "AI Agent Skills 组合实践：design-md / enhance-prompt / frontend-design / stitch-loop"
 Date: 2026-06-24
-Tags: ["#ai", "#agent", "#frontend", "#design", "#stitch", "#verified"]
+Tags: ["#ai-workflow", "#rule", "#agent", "#frontend", "#design", "#stitch", "#verified"]
 Status: Verified
 Source: "skill-registry-analysis"
 Related: []
