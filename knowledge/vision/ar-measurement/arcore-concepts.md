@@ -118,3 +118,7 @@ ARCore 内部的一个可选子能力，用来获取深度图。
 - **Anchor Drift**：由于追踪误差累积，Anchor 在世界坐标系中发生偏移的现象。
 - **ToF（Time of Flight）**：飞行时间传感器，通过测量光脉冲往返时间获取深度。
 - **运动视差深度（Motion Stereo Depth）**：利用相机移动产生的视差来估算深度，无需专用深度传感器。
+
+## 相关实践
+
+- [FireCopilot 测距功能方案演进史](approaches-evolution.md) — 从像素估算到锁定平面射线投影的六阶段演进记录。

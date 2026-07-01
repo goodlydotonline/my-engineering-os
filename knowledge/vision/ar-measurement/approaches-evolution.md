@@ -4,7 +4,7 @@ Date: 2026-06-24
 Tags: ["#vision", "#ar", "#arcore", "#android", "#measurement", "#evolution", "#verified"]
 Status: Verified
 Source: "firecopilot-session-4.6~4.7"
-Related: ["knowledge/vision/android-ar-hardware-arcore-depth-api.md", "knowledge/vision/android-arcore-distance-measurement-accuracy.md"]
+Related: ["knowledge/vision/ar-measurement/arcore-concepts.md"]
 ---
 
 # FireCopilot 测距功能方案演进史
@@ -24,7 +24,7 @@ Related: ["knowledge/vision/android-ar-hardware-arcore-depth-api.md", "knowledge
 
 ARCore 世界坐标系：单位**米**，Y 轴朝上，原点是 session 启动时相机的位置。一个 `Anchor`（锚点）就是 ARCore 持续跟踪的一个世界坐标点。
 
-> 关键认知（来自 [辨析：安卓手机 AR 硬件支持、ARCore、ARCore Depth API](knowledge/vision/android-ar-hardware-arcore-depth-api.md)）：普通单目安卓手机 + ARCore，短距离良好条件下能到厘米级**演示**效果，但不应承诺稳定 <1~2cm。精度由硬件（是否有 ToF/Depth）、环境（光照/纹理）、用户行为（移动快慢）、算法（平面拟合/锚点漂移）四层共同决定。
+> 关键认知（来自 [辨析：安卓手机 AR 硬件支持、ARCore、ARCore Depth API](arcore-concepts.md)）：普通单目安卓手机 + ARCore，短距离良好条件下能到厘米级**演示**效果，但不应承诺稳定 <1~2cm。精度由硬件（是否有 ToF/Depth）、环境（光照/纹理）、用户行为（移动快慢）、算法（平面拟合/锚点漂移）四层共同决定。
 
 ---
 

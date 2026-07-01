@@ -17,8 +17,8 @@ Machine learning, LLMs, prompt engineering, and agentic systems.
 
 ## Vision
 Computer vision, image processing, and visual perception.
-- Directories: [`knowledge/vision/`](../knowledge/vision/)
-- Tags: `#vision`, `#cv`
+- Directories: [`knowledge/vision/`](../knowledge/vision/), [`knowledge/vision/ar-measurement/`](../knowledge/vision/ar-measurement/)
+- Tags: `#vision`, `#cv`, `#ar`, `#measurement`
 
 ## Docker
 Containerization, image builds, and runtime configuration.
