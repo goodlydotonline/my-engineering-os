@@ -17,5 +17,6 @@ Knowledge about AI-assisted development workflows, agent tooling, and human-AI c
 2. Promote verified workflows and guides here.
 3. Update when tools or best practices evolve.
 
-## Example Entry
+## Entries
 - `claude-code-customization-guide.md` — how to customize Claude Code via CLAUDE.md, Skills, and Hooks.
+- `installed-skills-reference.md` — reference for all `npx skills` installed in `~/.agents/skills/`.
