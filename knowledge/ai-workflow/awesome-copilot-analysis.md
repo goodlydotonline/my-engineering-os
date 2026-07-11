@@ -105,6 +105,33 @@ skills/<skill-name>/
 - 可发现：文件夹名即 skill ID，与 `SKILL.md` 中 `name` 字段一致。
 - 可扩展：assets / references / scripts 让复杂任务有地方放配套资源，而不是全塞进 prompt。
 
+### 2.4 Skill 的交付物契约与典型案例
+
+高质量的 `SKILL.md` 不仅是 prompt，更是一份**可执行契约**。其正文通常包含以下章节：
+
+| 章节 | 作用 |
+| :--- | :--- |
+| `## When to Use` / `## When NOT to Use` | 明确触发条件与反例，防止误触发 |
+| `## Prerequisites` | 环境、CLI、权限、IDE 扩展要求 |
+| `## Step-by-Step Workflow` | 编号步骤，强调顺序执行 |
+| `## Core Capabilities` | 能力清单 |
+| `## Guidelines` / `## Agent Behavior Rules` | `DO` / `DO NOT` 行为约束 |
+| `## Anti-Patterns` | 禁止做法与正确做法对照 |
+| `## Output Contract` | 交付物验收标准 |
+| `## Bundled Assets` / `## References` | 关联资源索引 |
+
+几个值得学习的代表性 skill：
+
+| Skill | 亮点 |
+| :--- | :--- |
+| [`acquire-codebase-knowledge`](https://github.com/github/awesome-copilot/tree/main/skills/acquire-codebase-knowledge) | 把“理解代码库”转化为 7 份可验证文档；自带 `scripts/scan.py`；要求每条主张都有源文件证据 |
+| [`brag-sheet`](https://github.com/github/awesome-copilot/tree/main/skills/brag-sheet) | 挖掘 Copilot CLI session 日志、git 提交、`gh pr list` 补全遗忘工作；强制 `action → result → evidence` 三段式 |
+| [`copilot-pr-autopilot`](https://github.com/github/awesome-copilot/tree/main/skills/copilot-pr-autopilot) | 10 步循环驱动 Copilot Code Review；每 10 轮 circuit breaker 防止机器人失控 |
+| [`code-tour`](https://github.com/github/awesome-copilot/tree/main/skills/code-tour) | 为 20 种 persona 生成 CodeTour `.tour` 文件；自带 `validate_tour.py` 校验路径与行号 |
+| [`draw-io-diagram-generator`](https://github.com/github/awesome-copilot/tree/main/skills/draw-io-diagram-generator) | 生成可直接在 VS Code draw.io 扩展中打开的 `.drawio` 文件；包含 XML 规范与校验脚本 |
+
+> 来源：`skills/` 目录扫描与 `SKILL.md` 抽样分析。
+
 ---
 
 ## 3. 元数据与命名规范
@@ -369,6 +396,24 @@ Plugin 是一个有趣的工程案例：
 很多 agent 不是“空 prompt”，而是声明依赖 MCP server。例如 [`agents/apify-integration-expert.agent.md`](https://github.com/github/awesome-copilot/blob/main/agents/apify-integration-expert.agent.md) 明确依赖 `apify` MCP，并在 README 表格里展示 “Install MCP” 按钮。
 
 这代表一种趋势：**agent 的能力边界由 prompt + tools + MCP 共同定义**。仓库通过表格把 MCP 依赖显式化，用户安装前就知道需要配置什么。
+
+### 5.5 Skill 的分类机制与平台适配
+
+`awesome-copilot` 的 Skill **没有强主题标签体系**。构建脚本为 Skill 生成的 filters 只有 `hasAssets: ["Yes", "No"]`，网站和 README 主要按标题字母顺序排列。主题识别更多依赖：
+
+- **命名前缀**：`azure-*`、`aws-*`、`csharp-*`、`mcp-*`、`github-*`
+- **描述关键词**：用户通过全文搜索发现
+
+但这并不意味着 Skill 不写平台要求，相反，**平台适配被显式化**：
+
+| 维度 | 说明 |
+| :--- | :--- |
+| 操作系统 | `batch-files` 声明 Windows + cmd.exe；`brag-sheet` 声明 Cross-platform |
+| CLI / 运行时 | `acquire-codebase-knowledge` 要求 Python 3.8+ + git；`copilot-pr-autopilot` 要求 PowerShell + `gh` CLI |
+| IDE 扩展 | `draw-io-diagram-generator` 依赖 `hediet.vscode-drawio`；`code-tour` 依赖 CodeTour 扩展 |
+| 第三方服务 | 大量 Azure / AWS / Microsoft 365 / GitHub 原生 Skill |
+
+**工程启示**：不要假设用户环境一致，而是在 `Prerequisites` 或 frontmatter 中把依赖说清楚，让安装失败时容易定位。
 
 ---
 
