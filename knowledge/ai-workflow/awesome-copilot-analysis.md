@@ -75,6 +75,16 @@ Related: ["knowledge/ai-workflow/claude-code-customization-guide.md", "knowledge
 
 > 来源：[README.md#whats-in-this-repo](https://github.com/github/awesome-copilot/blob/main/README.md#whats-in-this-repo)
 
+#### 已合并或演化的历史类型
+
+| 历史类型 | 当前状态 | 说明 |
+| :--- | :--- | :--- |
+| **Chat Modes** | 已并入 Agents | VS Code 1.106+ 将 "Chat Modes" 重命名为 "Agents"，原 `.chatmode.md` 不再使用 |
+| **Prompts** | 不再在根目录维护 | 原 `prompts/` 目录已移除（见 Issue #921），`.prompt.md` 格式多内嵌于 Skill 中 |
+| **Collections** | 仅有 Schema，无实际目录 | Discussion #221 提出的集合机制已被 Plugins 吸收，如原 `devops-oncall` collection 已演化为 `plugins/devops-oncall/` |
+
+> 来源：[Issue #921](https://github.com/github/awesome-copilot/issues/921)、[Discussion #221](https://github.com/github/awesome-copilot/discussions/221)
+
 ### 2.2 分类背后的设计思想
 
 1. **粒度分层**：Instruction 是最轻量的规范；Skill 增加了 bundled assets；Plugin 再把多个资源打包；Workflow 提升到仓库级自动化。
@@ -155,17 +165,34 @@ skills/<skill-name>/
 
 ```markdown
 ---
-description: 'Brief description of the agent and its purpose'
-model: 'gpt-5'
-tools: ['codebase', 'terminalCommand']
-name: 'My Agent Name'
+description: 'Brief description of the agent purpose and capabilities'
+name: 'Agent Display Name'
+tools: ['read', 'edit', 'search']
+model: 'Claude Sonnet 4.5'
+target: 'vscode'
+user-invocable: true
+disable-model-invocation: false
+mcp-servers:
+  - server-name
+handoffs:
+  - label: Start Implementation
+    agent: implementation
+    prompt: 'Now implement the plan outlined above.'
+    send: false
 ---
 ```
 
-- `description`：必填。
-- `model`：强烈建议指定，避免默认模型不匹配。
-- `tools`：建议列出该 agent 依赖的工具。
-- `name`：人类可读名称。
+关键字段：
+
+| 字段 | 说明 |
+| :--- | :--- |
+| `description` | 必填，说明 agent 用途与能力 |
+| `name` | 人类可读名称（可选，默认取文件名） |
+| `tools` | agent 可调用的工具列表 |
+| `model` | 强烈推荐指定，避免默认模型不匹配 |
+| `target` | 目标平台，如 `vscode` / `github-copilot` |
+| `mcp-servers` | 仅组织/企业级 Agent 支持，声明依赖的 MCP 服务器 |
+| `handoffs` | VS Code 1.106+ 支持多 Agent 顺序工作流，可定义子 Agent 切换 |
 
 示例：[`agents/address-comments.agent.md`](https://github.com/github/awesome-copilot/blob/main/agents/address-comments.agent.md) 指定了 28 个 tools，包括 `changes`、`codebase`、`editFiles`、`github` 等。
 
@@ -452,6 +479,27 @@ bash eng/fix-line-endings.sh
 | `llms.txt` | 机器可读索引 | agents / instructions / skills |
 
 > 来源：[README.md](https://github.com/github/awesome-copilot/blob/main/README.md)
+
+#### VS Code 扩展与 CLI 集成
+
+Awesome Copilot 不仅是静态仓库，还配套了消费端工具：
+
+- **VS Code 扩展** `TimHeuer.awesome-copilot`：在 Activity Bar 中浏览资产目录树，支持 Agents、Instructions、Prompts、Skills 等分类，并可直接下载到工作区对应路径：
+
+  | 类别 | 下载目标路径 |
+  | :--- | :--- |
+  | Chat Modes / Agents | `.github/chatmodes/` 或 `.github/agents/` |
+  | Instructions | `.github/instructions/` |
+  | Prompts | `.github/prompts/` |
+  | Skills | `.github/skills/`（保留整个文件夹） |
+
+- **Copilot CLI 默认市场**：`copilot plugin install <name>@awesome-copilot` 可直接安装插件；若市场未注册，可先执行 `copilot plugin marketplace add github/awesome-copilot`。
+
+- **官方网站**：`https://awesome-copilot.github.com` 提供全文搜索、过滤、Learning Hub 与 Tools 区。
+
+- **机器可读索引**：`https://awesome-copilot.github.com/llms.txt` 供 AI 工具自动发现资源。
+
+> 来源：[timheuer/vscode-awesome-copilot](https://github.com/timheuer/vscode-awesome-copilot)、[awesome-copilot.github.com](https://awesome-copilot.github.com)
 
 ### 6.2 规范优先于实现
 
