@@ -20,3 +20,4 @@ Knowledge about AI-assisted development workflows, agent tooling, and human-AI c
 ## Entries
 - `claude-code-customization-guide.md` — how to customize Claude Code via CLAUDE.md, Skills, and Hooks.
 - `installed-skills-reference.md` — reference for all `npx skills` installed in `~/.agents/skills/`.
+- `awesome-copilot-analysis.md` — engineering analysis of the `github/awesome-copilot` repository and lessons for `awesome-ai-coding`.
