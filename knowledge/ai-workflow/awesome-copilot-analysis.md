@@ -313,22 +313,58 @@ bash eng/fix-line-endings.sh
 
 ### 4.4 CI/CD 质量门槛
 
-`.github/workflows/` 里约有 30 个工作流，形成多层防护：
+`.github/workflows/` 下约有 **40 个工作流**，可按职责分为 PR 质量门、外部插件治理、发布与网站、仓库维护自动化四类。
+
+#### PR 质量门
 
 | 工作流 | 触发条件 | 作用 |
 | :--- | :--- | :--- |
 | `validate-readme.yml` | PR 改动资源目录 | 运行 `npm run plugin:validate` + `npm start`，若 README 生成结果与提交不一致则失败 |
-| `skill-check.yml` | PR 改动 skills/agents | 用 `@microsoft/vally-cli lint` 校验 changed skill / agent |
+| `skill-check.yml` + `skill-check-comment.yml` | PR 改动 skills/agents | 用 `@microsoft/vally-cli lint` 校验 changed skill / agent，结果通过 artifact 评论到 PR |
 | `check-plugin-structure.yml` | PR 改动 plugins | 检查 plugin 目录内是否存在实物化文件或 symlink |
 | `validate-canvas-extensions.yml` | PR 改动 extensions | 校验 canvas extension 结构 |
 | `validate-agentic-workflows-pr.yml` | PR 改动 workflows | 校验 `.md` workflow，阻止 `.yml`/`.lock.yml` 入仓 |
-| `contributor-check.yml` | PR / issue 打开/编辑 | 用 AGT（Agent Governance Toolkit）做贡献者声誉与凭据审计 |
-| `external-plugin-intake.yml` | issue 提交外部插件 | 自动化 intake 校验、打标签、质量门 |
-| `external-plugin-pr-quality-gates.yml` | 外部插件 PR | 对 changed external plugin 跑安装冒烟测试和 vally lint |
-| `publish.yml` | 发布 | 把资源物化并发布到 marketplace 分支/网站 |
-| `build-website.yml` / `deploy-website.yml` | 网站相关改动 | 构建并部署官方站点 |
+| `pr-risk-scan.yml` + `pr-risk-scan-comment.yml` | PR 改动核心内容 | 运行 `eng/pr-risk-scan.mjs` 扫描潜在风险并评论 |
+| `check-line-endings.yml` | push/PR | 检查 Markdown 文件不含 CRLF |
+| `codespell.yml` | push/PR | 拼写检查 |
+| `contributor-check.yml` | PR / issue | 用 AGT（Agent Governance Toolkit）做贡献者声誉与凭据审计 |
+| `label-pr-intent.yml` | PR | 根据文件路径自动打 `skills`、`plugin`、`agent` 等意图标签 |
 
-> 来源：[`.github/workflows/`](https://github.com/github/awesome-copilot/tree/main/.github/workflows)
+#### 外部插件治理
+
+| 工作流 | 作用 |
+| :--- | :--- |
+| `external-plugin-intake.yml` | Issue 提交时解析并触发质量门 |
+| `external-plugin-quality-gates.yml` | 可复用工作流，运行 vally lint 与 Copilot CLI 冒烟测试 |
+| `external-plugin-pr-quality-gates.yml` | PR 修改 `plugins/external.json` 时对变更条目跑质量门 |
+| `external-plugin-approval-command.yml` | 监听 issue 评论 `/approve`、`/reject` 等 |
+| `external-plugin-command-router.yml` | 命令路由分发 |
+| `external-plugin-rereview.yml` | 6 个月复审调度 |
+| `external-plugin-rereview-command.yml` | 复审命令处理 |
+
+#### 发布与网站
+
+| 工作流 | 作用 |
+| :--- | :--- |
+| `publish.yml` | `main` push 后将插件物化并原子推送到 `marketplace` 分支，随后触发网站部署 |
+| `build-website.yml` | PR 阶段构建 Astro 网站 |
+| `deploy-website.yml` | 手动触发，构建并部署到 GitHub Pages |
+| `contributors.yml` | 每周日检查/更新贡献者，自动提 PR |
+
+#### 仓库维护自动化（Agentic Workflows）
+
+部分工作流以 `.md` 源文件形式存在于 `workflows/`，由 `gh-aw` CLI 编译为 `.lock.yml`，例如：
+
+- `duplicate-resource-detector`：检测重复资源
+- `resource-staleness-report`：报告过期资源
+- `learning-hub-updater`：更新学习资料索引
+- `codeowner-update`：同步 CODEOWNERS
+- `pr-duplicate-check`：检查重复 PR
+- `cli-for-beginners-sync`：同步入门教程
+
+`.github/aw/actions-lock.json` 用于锁定这些工作流编译时的 Actions 版本。
+
+> 来源：[`.github/workflows/`](https://github.com/github/awesome-copilot/tree/main/.github/workflows)、[`eng/README.md`](https://github.com/github/awesome-copilot/blob/main/eng/README.md)
 
 ### 4.5 外部插件审核流程
 
@@ -345,9 +381,63 @@ bash eng/fix-line-endings.sh
 
 ---
 
-## 5. 跨平台与生态设计
+## 5. Issue / PR 模板与社区协作约定
 
-### 5.1 多入口消费
+仓库的协作体验由模板和标签体系共同支撑。
+
+### 5.1 Issue 模板
+
+目前只有一个表单模板：`.github/ISSUE_TEMPLATE/external-plugin.yml`，专门用于提交公开 GitHub 托管的外部插件。模板收集：
+
+- 插件名、描述、仓库地址
+- 不可变 `ref` 或 `sha`、版本、许可证
+- 作者、关键词、附加说明
+- 确认复选框（遵守条款、可公开访问等）
+
+### 5.2 PR 模板
+
+`.github/pull_request_template.md` 提供完整清单：
+
+- 已阅读 CONTRIBUTING.md 与付费服务指南
+- 文件放在正确目录并遵循命名规范
+- 已在 GitHub Copilot 中测试
+- 已运行 `npm start` 并确认 README 已更新
+- PR 目标分支为 `main`
+
+### 5.3 维护者命令与标签
+
+外部插件生命周期依赖标签和 issue 评论命令：
+
+| 命令/标签 | 作用 |
+| :--- | :--- |
+| `external-plugin`、`awaiting-review`、`ready-for-review` | 阶段标签 |
+| `/rerun-intake` | 重新跑自动化 intake |
+| `/mark-ready-for-review [reason]` | 人工推进到待审 |
+| `/approve` / `/reject <reason>` | 通过或拒绝 |
+| `/re-review-keep` / `/re-review-needs-changes` / `/re-review-remove` | 六个月复审操作 |
+
+### 5.4 贡献者认可
+
+仓库使用 [all-contributors](https://github.com/all-contributors/all-contributors) 管理贡献者列表，支持 `Instructions`、`Agents`、`Skills`、`Workflows`、`Plugins` 等自定义贡献类型。贡献者可在 Issue/PR 中评论：
+
+```markdown
+@all-contributors add @username for instructions, skills
+```
+
+每周日 UTC 03:00 自动生成贡献者列表 PR。
+
+### 5.5 付费服务与 AI agent 提交约定
+
+- **付费服务**：提交前必须先阅读 Discussion #968《Guidance for submissions involving paid services》，避免误导用户产生额外费用。
+- **AI agent 提交**：PR 标题末尾加 `🤖🤖🤖` 可走快速通道，但仍需人类 review。
+
+> 来源：[CONTRIBUTING.md](https://github.com/github/awesome-copilot/blob/main/CONTRIBUTING.md)、[.github/ISSUE_TEMPLATE/external-plugin.yml](https://github.com/github/awesome-copilot/blob/main/.github/ISSUE_TEMPLATE/external-plugin.yml)、[.github/pull_request_template.md](https://github.com/github/awesome-copilot/blob/main/.github/pull_request_template.md)
+
+---
+
+## 6. 跨平台与生态设计
+
+### 6.1 多入口消费
 
 同一套资源支持多种入口：
 
@@ -363,7 +453,7 @@ bash eng/fix-line-endings.sh
 
 > 来源：[README.md](https://github.com/github/awesome-copilot/blob/main/README.md)
 
-### 5.2 规范优先于实现
+### 6.2 规范优先于实现
 
 仓库大量依赖**外部规范**，而不是自己发明格式：
 
@@ -375,7 +465,7 @@ bash eng/fix-line-endings.sh
 
 **工程启示**：不要为每种平台单独设计格式，而是在通用层定义最小的 schema，再在不同平台上做适配层。
 
-### 5.3 Marketplace 物化机制
+### 6.3 Marketplace 物化机制
 
 Plugin 是一个有趣的工程案例：
 
@@ -391,13 +481,13 @@ Plugin 是一个有趣的工程案例：
 
 > 来源：[`.github/workflows/check-plugin-structure.yml`](https://github.com/github/awesome-copilot/blob/main/.github/workflows/check-plugin-structure.yml)、[CONTRIBUTING.md#plugin-guidelines](https://github.com/github/awesome-copilot/blob/main/CONTRIBUTING.md#plugin-guidelines)
 
-### 5.4 MCP 生态集成
+### 6.4 MCP 生态集成
 
 很多 agent 不是“空 prompt”，而是声明依赖 MCP server。例如 [`agents/apify-integration-expert.agent.md`](https://github.com/github/awesome-copilot/blob/main/agents/apify-integration-expert.agent.md) 明确依赖 `apify` MCP，并在 README 表格里展示 “Install MCP” 按钮。
 
 这代表一种趋势：**agent 的能力边界由 prompt + tools + MCP 共同定义**。仓库通过表格把 MCP 依赖显式化，用户安装前就知道需要配置什么。
 
-### 5.5 Skill 的分类机制与平台适配
+### 6.5 Skill 的分类机制与平台适配
 
 `awesome-copilot` 的 Skill **没有强主题标签体系**。构建脚本为 Skill 生成的 filters 只有 `hasAssets: ["Yes", "No"]`，网站和 README 主要按标题字母顺序排列。主题识别更多依赖：
 
@@ -417,11 +507,11 @@ Plugin 是一个有趣的工程案例：
 
 ---
 
-## 6. 对 `awesome-ai-coding` 的借鉴与建议
+## 7. 对 `awesome-ai-coding` 的借鉴与建议
 
-### 6.1 推荐采纳的做法
+### 7.1 推荐采纳的做法
 
-#### 6.1.1 严格分层：Skill / Agent / Instruction / Hook / Plugin / Workflow
+#### 7.1.1 严格分层：Skill / Agent / Instruction / Hook / Plugin / Workflow
 
 `awesome-ai-coding` 目前以 skills 为主，未来可逐步引入：
 
@@ -431,7 +521,7 @@ Plugin 是一个有趣的工程案例：
 - `plugins/`：把相关 skills 打包成场景化工具包。
 - `workflows/`：Agentic Workflow 或自定义自动化。
 
-#### 6.1.2 “一个 Skill 一个文件夹”并附带平台适配文件
+#### 7.1.2 “一个 Skill 一个文件夹”并附带平台适配文件
 
 `awesome-ai-coding` 已经采用 `skills/<name>/SKILL.md`，可以继续深化：
 
@@ -446,7 +536,7 @@ skills/<name>/
 
 这与 `awesome-copilot` 的 `SKILL.md + bundled assets` 模式一致，只是增加了平台适配层。
 
-#### 6.1.3 frontmatter 作为“机器可读契约”
+#### 7.1.3 frontmatter 作为“机器可读契约”
 
 `awesome-coding` 已经使用：
 
@@ -463,7 +553,7 @@ Related: ["..."]
 
 可以继续借鉴 `awesome-copilot` 在 SKILL.md / agent.md 内部增加 `name`、`description`、`model`、`tools`、`applyTo` 等技术 frontmatter，用于自动化索引和校验。
 
-#### 6.1.4 用脚本生成索引，而非手工维护
+#### 7.1.4 用脚本生成索引，而非手工维护
 
 `awesome-copilot` 的 `npm run build` 会重新生成所有 README 表格。`awesome-ai-coding` 当前还靠手工更新根 README 和各目录 README，建议引入：
 
@@ -471,7 +561,7 @@ Related: ["..."]
 - `scripts/validate-skills.mjs`：检查文件夹名与 `SKILL.md` 中 `name` 是否一致、frontmatter 是否完整。
 - GitHub Actions：PR 时自动校验索引是否过期。
 
-#### 6.1.5 拒绝低价值贡献
+#### 7.1.5 拒绝低价值贡献
 
 `CONTRIBUTING.md` 明确拒绝：
 
@@ -481,7 +571,7 @@ Related: ["..."]
 
 对个人仓库同样适用：skill 应该解决**特定领域、特定工具链、特定团队规范**的问题，而不是泛泛的“帮我写代码”。
 
-#### 6.1.6 安全与责任 AI 底线
+#### 7.1.6 安全与责任 AI 底线
 
 `awesome-copilot` 拒绝任何绕过安全策略、生成有害内容、利用漏洞的提交，并运行 contributor-check 与凭据审计。
 
@@ -490,7 +580,15 @@ Related: ["..."]
 - 不收录用于规避安全、生成恶意代码、自动化攻击的 skill。
 - hook 涉及 secrets scan、权限检查等安全检查优先。
 
-### 6.2 需要避免的反模式
+#### 7.1.7 贡献者认可与社区模板
+
+借鉴 `all-contributors` 机制，即使个人仓库也可以：
+
+- 在 README 底部保留 Contributors 区域。
+- 提供 `.github/ISSUE_TEMPLATE/` 和 `pull_request_template.md`，降低外部贡献门槛。
+- 对 AI agent 提交的 PR 用固定标记（如 `🤖🤖🤖`）区分，便于快速通道和审计。
+
+### 7.2 需要避免的反模式
 
 | 反模式 | 说明 | 规避方法 |
 | :--- | :--- | :--- |
@@ -500,8 +598,9 @@ Related: ["..."]
 | **把不同平台格式混在同一文件** | 导致无法跨工具消费 | 通用放 `SKILL.md`，平台适配放 `claude-code.md` / `codex.md` |
 | **缺少校验门槛** | PR 质量不可控 | 引入本地 `npm run validate` + GitHub Actions |
 | **让 AI 直接提交 prompt 而不审查** | 易产生低质量、冲突或有害内容 | 要求人类 review，AI 用 `🤖🤖🤖` 标记 PR 标题以快速通道 |
+| **缺少 Issue/PR 模板** | 贡献者不知道提交规范 | 提供模板和检查清单 |
 
-### 6.3 可立即落地的行动建议
+### 7.3 可立即落地的行动建议
 
 针对 `awesome-ai-coding` 的现状，建议按优先级实施：
 
@@ -517,7 +616,7 @@ Related: ["..."]
 5. **引入 GitHub Actions**：
    - PR 时校验 frontmatter 完整性。
    - PR 时运行 `npm run build`，检查 README 是否过期。
-6. **写一份 `CONTRIBUTING.md`**：明确接受/拒绝的 skill 类型、命名规则、PR 流程。
+6. **写一份 `CONTRIBUTING.md`**：明确接受/拒绝的 skill 类型、命名规则、PR 流程，并加入付费服务、责任 AI、AI agent 提交标记等约定。
 
 #### 中期（未来 1-3 个月）
 
@@ -527,17 +626,18 @@ Related: ["..."]
 
 ---
 
-## 7. 个人学习要点
+## 8. 个人学习要点
 
 1. **AI 定制资源的本质不是 prompt 工程，而是“产品化”**：把 prompt、tool、MCP、workflow 当作可安装、可版本化、可治理的软件包。
 2. **目录结构即 API**：`agents/`、`skills/`、`plugins/` 这些目录名不只是分类，它们决定了消费端如何扫描和加载。
 3. **自动化是规模的必要条件**：当条目超过 50 个，手工维护索引和规范检查不现实，必须用脚本和 CI 承担重复劳动。
 4. **规范先于内容**：先定义 frontmatter、命名、目录、PR 流程，再开放贡献，否则后期治理成本极高。
 5. **生态借力**：不要自己发明格式，优先复用 Claude Code spec、Agent Skills spec、GitHub Agentic Workflows 等已有标准。
+6. **社区协作需要模板与认可机制**：Issue/PR 模板、标签、维护者命令、all-contributors 共同降低协作摩擦。
 
 ---
 
-## 8. 相关链接
+## 9. 相关链接
 
 - 分析对象仓库：[github/awesome-copilot](https://github.com/github/awesome-copilot)
 - 官方站点：[awesome-copilot.github.com](https://awesome-copilot.github.com)
